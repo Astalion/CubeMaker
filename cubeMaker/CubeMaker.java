@@ -7,8 +7,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.LineNumberReader;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
@@ -144,14 +142,18 @@ public class CubeMaker {
 			FileWriter fw = new FileWriter(new File("missing.txt"));
 			fw.write("");
 			fw.close();
-			Scanner s = new Scanner(new File(cubeFile));
+			
+			File cube = new File(cubeFile);
+			
+			Scanner s = new Scanner(cube);
 			currDir = new File(".").getCanonicalPath();
 			
 			File imgDir = new File(currDir + "\\images");
 			FileUtilities.deleteDirectory(imgDir);
 			imgDir.mkdir();
 			
-			ProgressWindow pw = new ProgressWindow(cubeFile);
+			ProgBar pw = new ProgressWindow();
+			pw.initProgress(cube);
 			s.useDelimiter("\\s*\\n");
 			while(s.hasNext()){
 				String cardName = s.next();
@@ -162,9 +164,9 @@ public class CubeMaker {
 				if(found) {
 					if(i == 8){
 						pw.updateProgress("Merging image #" + n);
-						i = 0;
 						mergeImages(new File(imgDir, "img" + n + ext), 9);
-						System.out.println("Made image " + n);
+						
+						i = 0;
 						n++;
 					} else {
 						i++;
@@ -186,7 +188,7 @@ public class CubeMaker {
 				mergeImages(new File(currDir + "\\images", "img" + n + ext), i);
 			}
 			System.out.println("Done!");
-			pw.dispose();
+			pw.finish();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -196,14 +198,14 @@ public class CubeMaker {
 }
 
 @SuppressWarnings("serial")
-class ProgressWindow extends JFrame {
+class ProgressWindow extends JFrame implements ProgBar {
 	private JProgressBar progressBar;
 	private JLabel label;
 	int progress;
 
-	public static int countLines(String filename) {
+	public static int countLines(File cardfile) {
 		try {
-		    LineNumberReader reader  = new LineNumberReader(new FileReader(filename));
+		    LineNumberReader reader  = new LineNumberReader(new FileReader(cardfile));
 			int cnt = 0;
 			while (reader.readLine() != null) {}
 			
@@ -215,19 +217,15 @@ class ProgressWindow extends JFrame {
 		}
 	}
 	
-	public ProgressWindow(String fileName) {
+	public ProgressWindow() {
 	    /* Make a frame to show progress bar */
 	    super("Download Progress");
 	    setLocationRelativeTo(null); //Put frame near middle of screen
 	    JPanel bgPane = new JPanel();
 	    
-	    label = new JLabel("Downloading: ");
+	    label = new JLabel("Parsing card file...");
 	    
-	    int numLines = countLines(fileName);
-	    int numResult = (numLines - 1)/9 + 1;
-	    
-	    progress = 0;	    
-	    progressBar = new JProgressBar(0, numLines + numResult); //Initiate a progress bar with appropriate length
+	    progressBar = new JProgressBar(0, 1);
 	    progressBar.setValue(0);
 	    progressBar.setStringPainted(true);
 
@@ -240,16 +238,33 @@ class ProgressWindow extends JFrame {
 	    /* Final frame setup */
 	    add(bgPane);
 	    pack();
+	}
+
+	@Override
+	public void initProgress(File cardFile) {	    
+	    int numLines = countLines(cardFile);
+	    int numResult = (numLines - 1)/9 + 1;
+	    
+	    progress = 0;
+	    progressBar.setMaximum(numLines + numResult);
+
 	    setVisible(true);
 	}
-	
+
+	@Override
 	public void progCard(String cardName) {
 		updateProgress("Downloading: " + cardName);
 	}
-	
+
+	@Override
 	public void updateProgress(String status) {
 		label.setText(status);
 		progressBar.setValue(progress);
 		progress++;
+	}
+
+	@Override
+	public void finish() {
+		this.dispose();		
 	}
 }

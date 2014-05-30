@@ -6,7 +6,6 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-import utilities.FileUtilities;
 import utilities.ImageUtilities;
 
 
