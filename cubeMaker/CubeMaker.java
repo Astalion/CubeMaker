@@ -24,15 +24,14 @@ import utilities.ImageUtilities;
 
 
 public class CubeMaker {
-
+	
+	/*
+	 * Global constants
+	 */
 	private static final String format = "png";
 	private static final String ext = "." + format;
 	private static final String link = "http://magiccards\\.info/scans/en/[^\"]*";
 	private static final Pattern linkPattern = Pattern.compile(link);
-	private static String currDir;
-	private static Integer i = 0;
-	private static Integer n = 1;
-	private static BufferedImage[] parts = new BufferedImage[9];
 	
 	private static final Integer A4w = 2480;
 	private static final Integer A4h = 3508;
@@ -42,6 +41,25 @@ public class CubeMaker {
 	
 	private static final String dataDir = System.getenv("APPDATA") + "\\Cubemaker";
 	private static final String cacheDir = dataDir + "\\cached";
+	
+	/*
+	 * Member variables
+	 */
+	private File saveDir;	/* Directory to save images to */
+	private File cubeFile;	/* Cube file to read from */
+	private ProgBar pBar;	/* Progress Bar */
+	private String currDir;	/* Current directory (for local images and error files) */
+	private Integer i = 0;	/* Current sub-image */
+	private Integer n = 1;	/* Number of the current output file */
+	private BufferedImage[] parts;	/* Partial images (i.e. cards) */
+	
+	public CubeMaker(File saveDir, File cubeFile, ProgBar pBar) {
+		this.saveDir = saveDir;
+		this.cubeFile = cubeFile;
+		this.pBar = pBar;
+		
+		parts = new BufferedImage[9];
+	}
 
 	private static File getImage(String dir, String imageName) {
 		File f = new File(dir , imageName + ".jpg");
@@ -49,7 +67,7 @@ public class CubeMaker {
 		return f;
 	}
 	
-	private static void mergeImages(File output, int chunks) throws IOException{
+	private void mergeImages(int chunks) throws IOException{
 	    int rows = 3; 
         int cols = 3;
         
@@ -81,14 +99,22 @@ public class CubeMaker {
                 num++;  
             }  
         }
-        //System.out.println("Finished " + output.getName());  
-        //ImageIO.write(finalImg, format, output);  
-        ImageUtilities.saveImage(finalImg, output);
+
+        ImageUtilities.saveImage(finalImg, new File(saveDir, "img" + n + ext));
 	}
 	
-	private static Boolean findOnline(String cardName) throws IOException {
-		FileUtilities.saveURL("http://magiccards.info/query?q=!" + cardName.replaceAll(" ", "+"), new File("temp.html"));
+	/**
+	 * Download image file from magiccards.info, then save in local cache
+	 * 
+	 * @param cardName name of the card to find
+	 * @return true if successful, false if something failed
+	 * @throws IOException
+	 */
+	private Boolean findOnline(String cardName) throws IOException {
+		File tempHtml = new File("temp.html");
+		FileUtilities.saveURL("http://magiccards.info/query?q=!" + cardName.replaceAll(" ", "+"), tempHtml);
 		String found = FileUtilities.findInFile("temp.html", linkPattern);
+		tempHtml.delete();
 		if(found != null) {			
 			// Save file to cache
 			File saved = new File(cacheDir, cardName.replaceAll("[',]" , "") + ".jpg");
@@ -101,7 +127,15 @@ public class CubeMaker {
 		}
 	}
 	
-	private static Boolean findLocal(String cardName) throws IOException {
+	/**
+	 * Find local image file for the given card.
+	 * Searches in ./mse, ./pref, %appdata%/CubeMaker/cached, in that order
+	 * 
+	 * @param cardName name of the card to find
+	 * @return true if file found, false otherwise
+	 * @throws IOException
+	 */
+	private Boolean findLocal(String cardName) throws IOException {
 		String tempName = cardName.replaceAll("[',]" , "");
 		File mse = getImage(currDir + "\\mse", tempName);
 		if(mse.exists()) {
@@ -124,7 +158,7 @@ public class CubeMaker {
 		return false;
 	}
 	
-	private static Boolean findCard(String cardName) throws IOException {
+	private Boolean findCard(String cardName) throws IOException {
 		if (findLocal(cardName)) {
 			return true;
 		} else if(findOnline(cardName)) {
@@ -133,38 +167,38 @@ public class CubeMaker {
 			return false;
 		}
 	}
+	public static void main(String[] args) throws IOException {
+		File cubeFile = new File("cube.txt");
+		
+		String currDir = new File(".").getCanonicalPath();
+		File imgDir = new File(currDir + "\\images");
+		
+		CubeMaker cm = new CubeMaker(imgDir, cubeFile, new ProgressWindow());
+		cm.makeCube();		
+	}
 	
-	public static void main(String[] args) {
+	public void makeCube() {
 		// A4 = 2480 X 3508 pixels (300 dpi)
 		//1051x1487 = A4
-		final String cubeFile = "cube.txt";
 		try {
 			FileWriter fw = new FileWriter(new File("missing.txt"));
 			fw.write("");
 			fw.close();
 			
-			File cube = new File(cubeFile);
-			
-			Scanner s = new Scanner(cube);
+			Scanner s = new Scanner(cubeFile);
 			currDir = new File(".").getCanonicalPath();
 			
-			File imgDir = new File(currDir + "\\images");
-			FileUtilities.deleteDirectory(imgDir);
-			imgDir.mkdir();
-			
-			ProgBar pw = new ProgressWindow();
-			pw.initProgress(cube);
+			pBar.initProgress(cubeFile);
 			s.useDelimiter("\\s*\\n");
 			while(s.hasNext()){
 				String cardName = s.next();
-				pw.progCard(cardName);
+				pBar.progCard(cardName);
 				
-				FileUtilities.saveURL("http://magiccards.info/query?q=!" + cardName.replaceAll(" ", "+"), new File("temp.html"));
 				Boolean found = findCard(cardName);
 				if(found) {
 					if(i == 8){
-						pw.updateProgress("Merging image #" + n);
-						mergeImages(new File(imgDir, "img" + n + ext), 9);
+						pBar.updateProgress("Merging image #" + n);
+						mergeImages(9);
 						
 						i = 0;
 						n++;
@@ -177,18 +211,21 @@ public class CubeMaker {
 					fw.close();
 					System.out.println("Couldn't find " + cardName);
 					try {
-						FileUtilities.copyFile(new File(currDir, "temp.html"), new File(currDir + "\\errors", cardName +".html"));					
+						FileUtilities.saveURL(
+								"http://magiccards.info/query?q=!" + cardName.replaceAll(" ", "+"),
+								new File(currDir + "\\errors", cardName +".html")
+							);
 					} catch (Exception e) {
 						
 					}
 				}
 			}
 			if(i != 0){
-				pw.updateProgress("Merging image #" + n);
-				mergeImages(new File(currDir + "\\images", "img" + n + ext), i);
+				pBar.updateProgress("Merging image #" + n);
+				mergeImages(i);
 			}
 			System.out.println("Done!");
-			pw.finish();
+			pBar.finish();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
