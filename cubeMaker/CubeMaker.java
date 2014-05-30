@@ -48,9 +48,10 @@ public class CubeMaker {
 	private File saveDir;	/* Directory to save images to */
 	private File cubeFile;	/* Cube file to read from */
 	private ProgBar pBar;	/* Progress Bar */
+	
 	private String currDir;	/* Current directory (for local images and error files) */
-	private Integer i = 0;	/* Current sub-image */
-	private Integer n = 1;	/* Number of the current output file */
+	private Integer i;		/* Current sub-image */
+	private Integer n;		/* Number of the current output file */
 	private BufferedImage[] parts;	/* Partial images (i.e. cards) */
 	
 	public CubeMaker(File saveDir, File cubeFile, ProgBar pBar) {
@@ -167,6 +168,7 @@ public class CubeMaker {
 			return false;
 		}
 	}
+	
 	public static void main(String[] args) throws IOException {
 		File cubeFile = new File("cube.txt");
 		
@@ -180,6 +182,8 @@ public class CubeMaker {
 	public void makeCube() {
 		// A4 = 2480 X 3508 pixels (300 dpi)
 		//1051x1487 = A4
+		i = 0;
+		n = 1;
 		try {
 			FileWriter fw = new FileWriter(new File("missing.txt"));
 			fw.write("");
@@ -290,7 +294,7 @@ class ProgressWindow extends JFrame implements ProgBar {
 
 	@Override
 	public void progCard(String cardName) {
-		updateProgress("Downloading: " + cardName);
+		updateProgress("Loading: " + cardName);
 	}
 
 	@Override
@@ -302,6 +306,6 @@ class ProgressWindow extends JFrame implements ProgBar {
 
 	@Override
 	public void finish() {
-		this.dispose();		
+		this.dispose();
 	}
 }
