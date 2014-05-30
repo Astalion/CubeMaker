@@ -3,9 +3,13 @@ package cubeMaker;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.util.Scanner;
+import java.util.regex.MatchResult;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -25,6 +29,10 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 	 * Constants
 	 */
 	private static final String noFile = "<none chosen>";
+	
+	private static final String dataDir = System.getenv("APPDATA") + "\\Cubemaker";
+	private static final File configFile = new File(dataDir, "config.ini");
+	private static final String configPattern = "([^\\t]*)\\t([^\\t]*)";
 	
 	/*
 	 * Member variables
@@ -106,10 +114,61 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 		bgPane.add(progPane);
 		bgPane.add(makePane);
 		
+		loadConfig();
+		
 		add(bgPane);
 		pack();
 		setVisible(true);
 		setResizable(false);
+	}
+	
+	/*
+	 * Loads paths from config
+	 */
+	private void loadConfig() {
+		try {			
+			Scanner s = new Scanner(configFile);
+			s.useDelimiter("\n");
+			while(s.hasNext(configPattern)) {
+				s.next(configPattern);
+				MatchResult match = s.match();
+				
+				if(match.group(1).equals("cube")) {
+					cubeFile = new File(match.group(2));
+					cubeFileText.setText(cubeFile.getCanonicalPath());
+				} else if(match.group(1).equals("save")) {
+					saveDir = new File(match.group(2));
+					saveDirText.setText(saveDir.getCanonicalPath());					
+				}
+			}
+		} catch (FileNotFoundException e) {
+			cubeFile = null;
+			cubeFileText.setText(noFile);
+			saveDir = null;
+			saveDirText.setText(noFile);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/*
+	 * Saves path config to file
+	 */
+	private void saveConfig() {
+		FileWriter fw;
+		try {
+			fw = new FileWriter(configFile);
+			if(cubeFile != null) {
+				fw.write("cube\t" + cubeFile.getAbsolutePath() + "\n");
+			}
+			if(saveDir != null) {
+				fw.write("save\t" + saveDir.getAbsolutePath() + "\n");				
+			}
+			fw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/*
@@ -130,11 +189,8 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 				} catch (IOException e) {
 					cubeFileText.setText(cubeFile.getName());
 				}
-			} else {
-				// Clear chosen file
-				cubeFile = null;
-				cubeFileText.setText(noFile);
 			}
+			saveConfig();
 			window.pack();
 		}
 	}
@@ -158,11 +214,8 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 				} catch (IOException e) {
 					saveDirText.setText(saveDir.getName());
 				}
-			} else {
-				// Clear chosen file
-				saveDir = null;
-				saveDirText.setText(noFile);
 			}
+			saveConfig();
 			window.pack();
 		}
 	}
