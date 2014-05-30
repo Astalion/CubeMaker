@@ -76,7 +76,23 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 		/*
 		 * Progress bar and text
 		 */
+		JPanel progPane = new JPanel();
+		progPane.setLayout(new BoxLayout(progPane, BoxLayout.PAGE_AXIS));
 		
+		progText = new JLabel();
+		progPane.add(progText);
+		
+		progBar = new JProgressBar();	
+		progPane.add(progBar);
+		
+		/*
+		 * Make cube button
+		 */
+		JPanel makePane = new JPanel();
+		
+		makeButton = new JButton("Make cube");
+		makeButton.addActionListener(new makeHandler());
+		makePane.add(makeButton);
 		
 		/*
 		 * Finishing touches
@@ -84,6 +100,8 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 		bgPane.setLayout(new BoxLayout(bgPane, BoxLayout.PAGE_AXIS));
 		bgPane.add(cubeFilePane);
 		bgPane.add(saveDirPane);
+		bgPane.add(progPane);
+		bgPane.add(makePane);
 		
 		add(bgPane);
 		pack();
@@ -145,6 +163,19 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 			window.pack();
 		}
 	}
+	
+	/*
+	 * Handles initiating the making of cueb
+	 */
+	private class makeHandler implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent ev) {
+			if(saveDir != null && cubeFile != null) {
+				CubeMaker cm = new CubeMaker(saveDir, cubeFile, (ProgBar) window);
+				cm.makeCube();				
+			}
+		}
+	}
 
 	public static void main(String[] args) {
 		new CubeMakerGUI();
@@ -184,12 +215,15 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 		progText.setText(status);
 		progBar.setValue(progress);
 		progress++;
+		pack();
 	}
 
 	@Override
 	public void finish() {
-		// TODO Hide progress container
+		progBar.setValue(progress);
+		progText.setText("Done!");
 		
+		// TODO Hide progress container		
 	}
 
 }
