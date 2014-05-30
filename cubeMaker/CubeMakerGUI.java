@@ -14,6 +14,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.SwingWorker;
 
 /**
  * Basic GUI for the cube maker
@@ -79,10 +80,12 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 		JPanel progPane = new JPanel();
 		progPane.setLayout(new BoxLayout(progPane, BoxLayout.PAGE_AXIS));
 		
-		progText = new JLabel();
+		progText = new JLabel(" ");
+		progText.setAlignmentX(CENTER_ALIGNMENT);
 		progPane.add(progText);
 		
-		progBar = new JProgressBar();	
+		progBar = new JProgressBar();
+	    progBar.setStringPainted(true);
 		progPane.add(progBar);
 		
 		/*
@@ -171,8 +174,14 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
 			if(saveDir != null && cubeFile != null) {
-				CubeMaker cm = new CubeMaker(saveDir, cubeFile, (ProgBar) window);
-				cm.makeCube();				
+				new SwingWorker<Integer, Integer>() {
+					@Override
+					protected Integer doInBackground() throws Exception {
+						CubeMaker cm = new CubeMaker(saveDir, cubeFile, (ProgBar) window);
+						cm.makeCube();
+						return null;
+					}					
+				}.execute();			
 			}
 		}
 	}
@@ -200,6 +209,7 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 	    int numResult = (numLines - 1)/9 + 1;
 	    
 	    progress = 0;
+	    progBar.setMinimum(0);
 	    progBar.setMaximum(numLines + numResult);
 	    
 	    // TODO Show progress container
@@ -215,7 +225,7 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 		progText.setText(status);
 		progBar.setValue(progress);
 		progress++;
-		pack();
+		//pack();
 	}
 
 	@Override
