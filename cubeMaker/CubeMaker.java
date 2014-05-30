@@ -1,4 +1,4 @@
-package CubeMaker;
+package cubeMaker;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -20,8 +20,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 
-import Utilities.FileUtilities;
-import Utilities.ImageUtilities;
+import utilities.FileUtilities;
+import utilities.ImageUtilities;
+
 
 
 public class CubeMaker {

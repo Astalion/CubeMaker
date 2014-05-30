@@ -1,4 +1,4 @@
-package CubeMaker;
+package cubeMaker;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -6,8 +6,9 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-import Utilities.FileUtilities;
-import Utilities.ImageUtilities;
+import utilities.FileUtilities;
+import utilities.ImageUtilities;
+
 
 
 public class MSEImageFix {

@@ -1,4 +1,4 @@
-package CubeMaker;
+package cubeMaker;
 
 public class CubeMakerGUI {
 
