@@ -85,19 +85,28 @@ public class FileUtilities {
 	    }
 	}
 
-	public static String findInFile(String fileName, Pattern pattern) throws FileNotFoundException {
-		return findInFile(fileName, pattern, 0);
+	public static String findInFile(File f, Pattern pattern) throws FileNotFoundException {
+		return findInFile(f, pattern, 0);
 	}
 
-	public static String findInFile(String fileName, Pattern pattern, int group) throws FileNotFoundException {
-		Scanner sFile = new Scanner(new File(fileName));
+	public static String findInFile(File f, Pattern pattern, int group) throws FileNotFoundException {
+		Matcher m = matchInFile(f, pattern);
+		if(m != null) {
+			return m.group(group);
+		} else {
+			return null;
+		}
+	}
+
+	public static Matcher matchInFile(File f, Pattern pattern) throws FileNotFoundException {
+		Scanner sFile = new Scanner(f);
 		
 		while (sFile.hasNextLine()) {
 			String line = sFile.nextLine();
 			Matcher m = pattern.matcher(line);
 			Boolean found = m.find();
 			if(found) {
-				return m.group(group);
+				return m;
 			}
 		}
 		return null;

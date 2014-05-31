@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.Scanner;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
@@ -30,7 +31,8 @@ public class CubeMaker {
 	 */
 	private static final String format = "png";
 	private static final String ext = "." + format;
-	private static final String link = "http://magiccards\\.info/scans/en/[^\"]*";
+	// Group 0 is full link, 1 is the set
+	private static final String link = "http://magiccards\\.info/scans/en/([^/]*)/[^\"]*";
 	private static final Pattern linkPattern = Pattern.compile(link);
 	
 	private static final Integer A4w = 2480;
@@ -70,6 +72,7 @@ public class CubeMaker {
 	}
 	
 	private void mergeImages(int chunks) throws IOException{
+		// TODO: Bunch of things that could be constants
 	    int rows = 3; 
         int cols = 3;
         
@@ -122,13 +125,14 @@ public class CubeMaker {
 	 */
 	private BufferedImage findOnline(Card c) throws IOException {
 		File tempHtml = new File("temp.html");
-		FileUtilities.saveURL("http://magiccards.info/query?q=" + c.getURLName(), tempHtml);
-		String found = FileUtilities.findInFile("temp.html", linkPattern);
+		FileUtilities.saveURL("http://magiccards.info/query?q=" + c.getURLName(), tempHtml);		
+		Matcher m = FileUtilities.matchInFile(tempHtml, linkPattern);
 		tempHtml.delete();
-		if(found != null) {			
+		
+		if(m != null) {			
 			// Save file to cache
 			File saved = new File(cacheDir, c.getFileName() + ".jpg");
-			FileUtilities.saveURL(found, saved);
+			FileUtilities.saveURL(m.group(), saved);
 			
 			return ImageIO.read(saved);
 		} else {
