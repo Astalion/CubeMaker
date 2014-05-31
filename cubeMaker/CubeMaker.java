@@ -146,14 +146,17 @@ public class CubeMaker {
 	 */
 	private BufferedImage findLocal(Card c) throws IOException {
 		String tempName = c.getFileName();
-		File mse = getImage(currDir + "\\mse", tempName);
-		if(mse.exists()) {
-			return MSEImageFix.fixImage(mse);
-		} 
 		
-		File pref = getImage(currDir + "\\pref", tempName);
-		if(pref.exists()) {
-			return ImageIO.read(pref);
+		if(c.getSet() == null) {
+			File mse = getImage(currDir + "\\mse", tempName);
+			if(mse.exists()) {
+				return MSEImageFix.fixImage(mse);
+			} 
+			
+			File pref = getImage(currDir + "\\pref", tempName);
+			if(pref.exists()) {
+				return ImageIO.read(pref);
+			}			
 		}
 		
 		File cached = getImage(cacheDir, tempName);

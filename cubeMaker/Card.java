@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 public class Card {
 	private String name;
-	private String exp;
+	private String set;
 	private int count;
 
 	/*
@@ -13,7 +13,7 @@ public class Card {
 	 */
 	public Card(String name, String exp, int count) {
 		this.name = name;
-		this.exp = exp;
+		this.set = exp;
 		this.count = count;
 	}
 	public Card(String name) {
@@ -86,7 +86,7 @@ public class Card {
 	 * Getters
 	 */
 	public String getURLName() {
-		return "n!\"" + name.replace(" ", "+") + (exp != null ? "\"%20e:" + exp : "\"");
+		return "n!\"" + name.replace(" ", "+") + (set != null ? "\"%20e:" + set : "\"");
 	}	
 	public String getFileName() {
 		return name.replaceAll("[',]", "");
@@ -94,8 +94,8 @@ public class Card {
 	public String getName() {
 		return name;
 	}
-	public String getExp() {
-		return exp;
+	public String getSet() {
+		return set;
 	}
 	public int getCount() {
 		return count;
