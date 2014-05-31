@@ -104,27 +104,34 @@ public class CubeMaker {
         ImageUtilities.saveImage(finalImg, new File(saveDir, "img" + n + ext));
 	}
 	
+	private void updateCount(Card c, int count) {
+		c.decCount(count);
+		i += count;
+	}
+	private void updateCount(Card c) {
+		updateCount(c, 1);
+	}
+	
 	/**
 	 * Download image file from magiccards.info, then save in local cache
 	 * 
-	 * @param cardName name of the card to find
+	 * @param c card to find
 	 * @return true if successful, false if something failed
 	 * @throws IOException
 	 */
-	private Boolean findOnline(String cardName) throws IOException {
+	private BufferedImage findOnline(Card c) throws IOException {
 		File tempHtml = new File("temp.html");
-		FileUtilities.saveURL("http://magiccards.info/query?q=!" + cardName.replaceAll(" ", "+"), tempHtml);
+		FileUtilities.saveURL("http://magiccards.info/query?q=" + c.getURLName(), tempHtml);
 		String found = FileUtilities.findInFile("temp.html", linkPattern);
 		tempHtml.delete();
 		if(found != null) {			
 			// Save file to cache
-			File saved = new File(cacheDir, cardName.replaceAll("[',]" , "") + ".jpg");
+			File saved = new File(cacheDir, c.getFileName() + ".jpg");
 			FileUtilities.saveURL(found, saved);
 			
-			parts[i] = ImageIO.read(saved);
-			return true;
+			return ImageIO.read(saved);
 		} else {
-			return false;
+			return null;
 		}
 	}
 	
@@ -132,41 +139,45 @@ public class CubeMaker {
 	 * Find local image file for the given card.
 	 * Searches in ./mse, ./pref, %appdata%/CubeMaker/cached, in that order
 	 * 
-	 * @param cardName name of the card to find
+	 * @param c card to find
 	 * @return true if file found, false otherwise
 	 * @throws IOException
 	 */
-	private Boolean findLocal(String cardName) throws IOException {
-		String tempName = cardName.replaceAll("[',]" , "");
+	private BufferedImage findLocal(Card c) throws IOException {
+		String tempName = c.getFileName();
 		File mse = getImage(currDir + "\\mse", tempName);
 		if(mse.exists()) {
-			parts[i] = MSEImageFix.fixImage(mse, cardW, cardH);
-			return true;
+			return MSEImageFix.fixImage(mse, cardW, cardH);
 		} 
 		
 		File pref = getImage(currDir + "\\pref", tempName);
 		if(pref.exists()) {
-			parts[i] = ImageIO.read(pref);
-			return true;
+			return ImageIO.read(pref);
 		}
 		
 		File cached = getImage(cacheDir, tempName);
 		if(cached.exists()) {
-			parts[i] = ImageIO.read(cached);
-			return true;
+			return ImageIO.read(cached);
 		}
 		
-		return false;
+		return null;
 	}
 	
-	private Boolean findCard(String cardName) throws IOException {
-		if (findLocal(cardName)) {
-			return true;
-		} else if(findOnline(cardName)) {
-			return true;
+	private Boolean findCard(Card c) throws IOException {
+		BufferedImage img;
+		if ((img = findLocal(c)) != null) {
+			// Found locally
+		} else if((img = findOnline(c)) != null) {
+			// Found online
 		} else {
+			// Not found
 			return false;
 		}
+		while(i < 9 && c.getCount() > 0) {
+			parts[i] = img;
+			updateCount(c);
+		}
+		return true;
 	}
 	
 	public static void main(String[] args) throws IOException {
@@ -194,30 +205,33 @@ public class CubeMaker {
 			
 			pBar.initProgress(cubeFile);
 			s.useDelimiter("\\s*\\n");
-			while(s.hasNext()){
-				String cardName = s.next();
-				pBar.progCard(cardName);
+			Card c = new Card("empty", 0);
+			while(s.hasNext() || c.getCount() > 0){
+				if(c.getCount() == 0) {
+					String line = s.next();
+					c = Card.parseLine(line);					
+				}
+				pBar.progCard(c.getName());
 				
-				Boolean found = findCard(cardName);
+				Boolean found = findCard(c);
 				if(found) {
-					if(i == 8){
+					if(i == 9){
 						pBar.updateProgress("Merging image #" + n);
 						mergeImages(9);
 						
 						i = 0;
 						n++;
-					} else {
-						i++;
 					}
 				} else {
+					c.setCount(0);
 					fw = new FileWriter(new File(currDir, "missing.txt"), true);
-					fw.write(cardName+"\n");
+					fw.write(c.getName()+"\n");
 					fw.close();
-					System.out.println("Couldn't find " + cardName);
+					System.out.println("Couldn't find " + c.getName());
 					try {
 						FileUtilities.saveURL(
-								"http://magiccards.info/query?q=!" + cardName.replaceAll(" ", "+"),
-								new File(currDir + "\\errors", cardName +".html")
+								"http://magiccards.info/query?q=" + c.getURLName(),
+								new File(currDir + "\\errors", c.getName() +".html")
 							);
 					} catch (Exception e) {
 						

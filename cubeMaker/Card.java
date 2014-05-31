@@ -34,11 +34,11 @@ public class Card {
 	 * 	2 - Card name
 	 * 	3 - Expansion
 	 */
-	private static final String lineString = "(?:([0-9]+)[Xx]?\\s)?\\s*([^\\[\\]]+)\\s*(?:\\s\\[([^\\[\\]]+)\\])?";
+	private static final String lineString = "(?:([0-9]+)[Xx]?\\s)?\\s*([^\\[\\]]+)\\s*(?:\\s+\\[([^\\[\\]]+)\\])?[^\\[\\]]*";
 	private static final Pattern linePattern = Pattern.compile(lineString);
 	public static Card parseLine(String line) {
 		Matcher m = linePattern.matcher(line);
-		if(m.find()) {
+		if(m.matches()) {
 			Integer count;
 			try {
 				count = Integer.parseInt(m.group(1));				
@@ -73,7 +73,7 @@ public class Card {
 	public static void main(String[] args) {
 		String s = "2 Pack Rat [RTR]    ";
 		Matcher m = linePattern.matcher(s);
-		System.out.println(m.find());
+		System.out.println(m.matches());
 		System.out.println(Integer.parseInt(m.group(1)));
 		for(int i = 0; i < 4; i++) {
 			System.out.println(i + ": " + m.group(i));
@@ -84,7 +84,7 @@ public class Card {
 	 * Getters
 	 */
 	public String getURLName() {
-		return name.replace(" ", "+") + (exp != null ? " " + exp : "");
+		return "n!\"" + name.replace(" ", "+") + (exp != null ? "\"%20e:" + exp : "\"");
 	}	
 	public String getFileName() {
 		return name.replace("[',]", "");
@@ -97,6 +97,16 @@ public class Card {
 	}
 	public int getCount() {
 		return count;
+	}
+	
+	/*
+	 * Setters
+	 */
+	public void decCount(int amount) {
+		this.count -= amount;
+	}
+	public void setCount(int count) {
+		this.count = count;
 	}
 	
 	
