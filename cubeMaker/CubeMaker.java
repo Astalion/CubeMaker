@@ -185,7 +185,7 @@ public class CubeMaker {
 		i = 0;
 		n = 1;
 		try {
-			FileWriter fw = new FileWriter(new File("missing.txt"));
+			FileWriter fw = new FileWriter(new File(currDir, "missing.txt"));
 			fw.write("");
 			fw.close();
 			
@@ -210,7 +210,7 @@ public class CubeMaker {
 						i++;
 					}
 				} else {
-					fw = new FileWriter(new File("missing.txt"), true);
+					fw = new FileWriter(new File(currDir, "missing.txt"), true);
 					fw.write(cardName+"\n");
 					fw.close();
 					System.out.println("Couldn't find " + cardName);
@@ -228,7 +228,6 @@ public class CubeMaker {
 				pBar.updateProgress("Merging image #" + n);
 				mergeImages(i);
 			}
-			System.out.println("Done!");
 			pBar.finish();
 		} catch (Exception e) {
 			e.printStackTrace();
