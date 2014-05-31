@@ -41,6 +41,7 @@ public class CubeMaker {
 	
 	private static final String dataDir = System.getenv("APPDATA") + "\\Cubemaker";
 	private static final String cacheDir = dataDir + "\\cached";
+	private static final String errorDir = dataDir + "\\errors";
 	
 	/*
 	 * Member variables
@@ -147,7 +148,7 @@ public class CubeMaker {
 		String tempName = c.getFileName();
 		File mse = getImage(currDir + "\\mse", tempName);
 		if(mse.exists()) {
-			return MSEImageFix.fixImage(mse, cardW, cardH);
+			return MSEImageFix.fixImage(mse);
 		} 
 		
 		File pref = getImage(currDir + "\\pref", tempName);
@@ -196,7 +197,7 @@ public class CubeMaker {
 		i = 0;
 		n = 1;
 		try {
-			FileWriter fw = new FileWriter(new File(currDir, "missing.txt"));
+			FileWriter fw = new FileWriter(new File(errorDir, "missing.txt"));
 			fw.write("");
 			fw.close();
 			
@@ -224,14 +225,14 @@ public class CubeMaker {
 					}
 				} else {
 					c.setCount(0);
-					fw = new FileWriter(new File(currDir, "missing.txt"), true);
+					fw = new FileWriter(new File(errorDir, "missing.txt"), true);
 					fw.write(c.getName()+"\n");
 					fw.close();
 					System.out.println("Couldn't find " + c.getName());
 					try {
 						FileUtilities.saveURL(
 								"http://magiccards.info/query?q=" + c.getURLName(),
-								new File(currDir + "\\errors", c.getName() +".html")
+								new File(errorDir, c.getName() +".html")
 							);
 					} catch (Exception e) {
 						

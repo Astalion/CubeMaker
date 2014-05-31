@@ -86,17 +86,7 @@ public class FileUtilities {
 	}
 
 	public static String findInFile(String fileName, Pattern pattern) throws FileNotFoundException {
-		Scanner sFile = new Scanner(new File(fileName));
-		
-		while (sFile.hasNextLine()) {
-			String line = sFile.nextLine();
-			Scanner sLine = new Scanner(line);
-			String found = sLine.findInLine(pattern);
-			if(found != null) {
-				return found;
-			}
-		}
-		return null;
+		return findInFile(fileName, pattern, 0);
 	}
 
 	public static String findInFile(String fileName, Pattern pattern, int group) throws FileNotFoundException {
@@ -112,7 +102,38 @@ public class FileUtilities {
 		}
 		return null;
 	}
+	
+	public static Pair<String, String> findBothinFile(String fileName, 
+		Pattern pattern1, int group1, Pattern pattern2, int group2
+	) throws FileNotFoundException {
+		
+		Pair<String, String> p = new Pair<String, String>(null, null);
+		Scanner sFile = new Scanner(new File(fileName));
+		
+		while (sFile.hasNextLine()) {
+			String line = sFile.nextLine();
+			Matcher m = pattern1.matcher(line);
+			Boolean found = m.find();
+			if(found) {
+				p.first = m.group(group1);
+			}
+			
+			m = pattern2.matcher(line);
+			found = m.find();
+			if(found) {
+				p.second = m.group(group2);
+			}
+		}
+		return p;
+	}
 
+	/**
+	 * Find all occurrences of the given pattern in the given file
+	 * @param fileName	Name of the file
+	 * @param pattern	RegExp pattern to match
+	 * @return ArrayList containing all matching strings
+	 * @throws FileNotFoundException
+	 */
 	public static ArrayList<String> findAllInFile(String fileName, Pattern pattern) throws FileNotFoundException {
 		ArrayList<String> ret = new ArrayList<String>();
 		Scanner sFile = new Scanner(new File(fileName));
@@ -128,6 +149,11 @@ public class FileUtilities {
 		return ret;
 	}
 
+	/**
+	 * Delete directory and all contents (including subdirectories)
+	 * @param directory	Directory File to delete
+	 * @return true iff directory was deleted, otherwise false
+	 */
 	public static boolean deleteDirectory(File directory) {
 	    if(directory.exists()){
 	        File[] files = directory.listFiles();
@@ -145,6 +171,11 @@ public class FileUtilities {
 	    return(directory.delete());
 	}
 
+	/**
+	 * Get extension of given file
+	 * @param f	File to check
+	 * @return	File extension, or empty string if none found
+	 */
 	public static String fileExt(File f) {
 		String fileName = f.getName();
 		int i = fileName.lastIndexOf('.');

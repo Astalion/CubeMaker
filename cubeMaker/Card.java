@@ -71,6 +71,8 @@ public class Card {
 	}
 	
 	public static void main(String[] args) {
+		String s2 = "Akroma, Angel of Wrath";
+		System.out.println(s2.replaceAll("[',]", ""));
 		String s = "2 Pack Rat [RTR]    ";
 		Matcher m = linePattern.matcher(s);
 		System.out.println(m.matches());
@@ -87,7 +89,7 @@ public class Card {
 		return "n!\"" + name.replace(" ", "+") + (exp != null ? "\"%20e:" + exp : "\"");
 	}	
 	public String getFileName() {
-		return name.replace("[',]", "");
+		return name.replaceAll("[',]", "");
 	}
 	public String getName() {
 		return name;
