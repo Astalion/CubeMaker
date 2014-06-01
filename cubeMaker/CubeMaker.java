@@ -41,9 +41,9 @@ public class CubeMaker {
 	private static final Integer cardW = 718;
 	private static final Integer cardH = 1022;
 	
-	private static final String dataDir = System.getenv("APPDATA") + "\\Cubemaker";
-	private static final String cacheDir = dataDir + "\\cached";
-	private static final String errorDir = dataDir + "\\errors";
+	public static final String dataDir = System.getenv("APPDATA") + "\\Cubemaker";
+	public static final String cacheDir = dataDir + "\\cached";
+	public static final String errorDir = dataDir + "\\errors";
 	
 	/*
 	 * Member variables
@@ -250,8 +250,9 @@ public class CubeMaker {
 			if(i != 0){
 				pBar.updateProgress("Merging image #" + n);
 				mergeImages(i);
+				n++;
 			}
-			pBar.finish();
+			pBar.finish(n-1);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -327,7 +328,7 @@ class ProgressWindow extends JFrame implements ProgBar {
 	}
 
 	@Override
-	public void finish() {
+	public void finish(int numImages) {
 		this.dispose();
 	}
 }

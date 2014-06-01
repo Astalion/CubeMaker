@@ -12,9 +12,7 @@ import java.util.regex.Pattern;
 import utilities.FileUtilities;
 
 public class ImageIndex {
-	private static final String dataDir = System.getenv("APPDATA") + "\\Cubemaker";
-	private static final String cacheDir = dataDir + "\\cached";
-	private static final File indexFile = new File(cacheDir, "index.txt");
+	private static final File indexFile = new File(CubeMaker.cacheDir, "index.txt");
 	private static final String entry = "([^\\t]*)\\t([^\\t]*)";
 	private static final Pattern entryPattern = Pattern.compile(entry);
 	
@@ -86,7 +84,7 @@ public class ImageIndex {
 			if(set == null) return null;
 		}
 		
-		File f = new File(new File(cacheDir, set), name + ".jpg");
+		File f = new File(new File(CubeMaker.cacheDir, set), name + ".jpg");
 		if(f.exists()) {
 			return f;
 		} else {

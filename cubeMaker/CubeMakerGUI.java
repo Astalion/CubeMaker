@@ -17,6 +17,7 @@ import java.util.regex.MatchResult;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -24,9 +25,11 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JRadioButton;
 import javax.swing.JTextField;
-import javax.swing.SpringLayout;
 import javax.swing.SwingWorker;
+
+import utilities.FileUtilities;
 
 /**
  * Basic GUI for the cube maker
@@ -38,8 +41,7 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 	 */
 	private static final String noFile = "<none chosen>";
 	
-	private static final String dataDir = System.getenv("APPDATA") + "\\Cubemaker";
-	private static final File configFile = new File(dataDir, "config.ini");
+	private static final File configFile = new File(CubeMaker.dataDir, "config.ini");
 	private static final String configPattern = "([^\\t]*)\\t([^\\t]*)";
 	
 	/*
@@ -55,7 +57,11 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 	private JButton saveDirButton;
 	private JTextField saveDirText;
 	
+	private JRadioButton directButton;
+	private JRadioButton versionedButton;
+	
 	private JButton makeButton;
+	private JButton printedButton;
 	
 	private CubeMakerGUI window = this;
 	
@@ -117,6 +123,22 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 		c.gridy = 1;
 		c.anchor = GridBagConstraints.CENTER;
 		inputPane.add(saveDirButton, c);
+		
+		/*
+		 * Radio buttons
+		 */
+		JPanel radioPane = new JPanel();
+		
+		directButton = new JRadioButton("Direct");
+		radioPane.add(directButton);
+		
+		versionedButton = new JRadioButton("Versioned");
+		versionedButton.setSelected(true);
+		radioPane.add(versionedButton);
+		
+		ButtonGroup group = new ButtonGroup();
+		group.add(directButton);
+		group.add(versionedButton);
 
 		/*
 		 * Progress bar and text
@@ -141,14 +163,36 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 		makeButton.addActionListener(new makeHandler());
 		makePane.add(makeButton);
 		
+		printedButton = new JButton("Mark as printed");
+		printedButton.addActionListener(new markHandler());
+		makePane.add(printedButton);
+		
 		/*
 		 * Finishing touches
 		 */
 		bgPane.setLayout(new BoxLayout(bgPane, BoxLayout.PAGE_AXIS));
-		bgPane.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
+		//bgPane.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
+
+		bgPane.setBorder(
+				BorderFactory.createCompoundBorder(
+					BorderFactory.createEmptyBorder(5, 5, 5, 5),
+					BorderFactory.createCompoundBorder(
+							BorderFactory.createEtchedBorder(),
+							BorderFactory.createEmptyBorder(5, 10, 5, 10)
+						)						
+					)
+				);
+		//bgPane.setBorder(BorderFactory.createEtchedBorder());
 		bgPane.add(inputPane);
+		bgPane.add(radioPane);
 		bgPane.add(progPane);
 		bgPane.add(makePane);
+		
+		/*
+		JPanel appPane = new JPanel();
+		appPane.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
+		appPane.add(bgPane);
+		*/	
 		
 		loadConfig();
 		
@@ -284,14 +328,67 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 				JOptionPane.showMessageDialog(
 						window, "Cube file not found", "File not found", JOptionPane.ERROR_MESSAGE);				
 			} else {
-				new SwingWorker<Integer, Integer>() {
-					@Override
-					protected Integer doInBackground() throws Exception {
-						CubeMaker cm = new CubeMaker(saveDir, cubeFile, (ProgBar) window);
-						cm.makeCube();
-						return null;
-					}					
-				}.execute();			
+				if(directButton.isSelected()) {
+					new SwingWorker<Integer, Integer>() {
+						@Override
+						protected Integer doInBackground() throws Exception {
+							CubeMaker cm = new CubeMaker(saveDir, cubeFile, (ProgBar) window);
+							cm.makeCube();
+							return null;
+						}					
+					}.execute();					
+				} else {
+					new SwingWorker<Integer, Integer>() {
+						@Override
+						protected Integer doInBackground() throws Exception {
+							File tempCube = new File(CubeMaker.dataDir, "tempCube.txt");
+							File replaceFile = new File(saveDir, "replace.txt");
+							CopyCheck.getDiff(cubeFile, tempCube, replaceFile);
+							
+							CubeMaker cm = new CubeMaker(saveDir, tempCube, (ProgBar) window);
+							cm.makeCube();
+							tempCube.delete();
+							return null;
+						}					
+					}.execute();
+					
+				}
+			}
+		}
+	}
+	
+	private final static String confirmAdd = "Are you sure you want to mark %s as printed?\n" +
+			"Doing this means none of its cards will be added to new images";
+	private class markHandler implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent ev) {
+			final File cubeFile = new File(cubeFileText.getText());
+			if(cubeFile.exists()) {
+				int resp = JOptionPane.showConfirmDialog(window, 
+						String.format(confirmAdd, cubeFile.getName()), 
+						"Are you sure?", 
+						JOptionPane.YES_NO_OPTION);
+				if(resp == JOptionPane.YES_OPTION) {
+					new SwingWorker<Integer, Integer>() {
+						@Override
+						protected Integer doInBackground() throws Exception {
+							String fileName = cubeFile.getName();
+							
+							// Copy cube file
+							File destFile = new File(CopyCheck.printedDir, fileName);
+							FileUtilities.copyFile(cubeFile, destFile);
+							
+							// Add to list
+							FileWriter fw = new FileWriter(CopyCheck.printedFile, true);
+							fw.write(fileName + "\n");
+							fw.close();
+							return null;
+						}					
+					}.execute();					
+				}			
+			} else {
+				JOptionPane.showMessageDialog(
+						window, "Cube file not found", "File not found", JOptionPane.ERROR_MESSAGE);				
 			}
 		}
 	}
@@ -315,6 +412,7 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 	}
 	@Override
 	public void initProgress(File cardFile) {
+		progText.setText("Starting...");
 		int numLines = countLines(cardFile);
 	    int numResult = (numLines - 1)/9 + 1;
 	    
@@ -339,9 +437,9 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 	}
 
 	@Override
-	public void finish() {
+	public void finish(int numImages) {
 		progBar.setValue(progress);
-		progText.setText("Done!");
+		progText.setText("Done! Created " + numImages + " images");
 		
 		// TODO Hide progress container		
 	}

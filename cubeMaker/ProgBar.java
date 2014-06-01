@@ -19,5 +19,5 @@ public interface ProgBar {
 	public void updateProgress(String status);
 	
 	/** Dispose of bar or whatever */
-	public void finish();
+	public void finish(int numImages);
 }
