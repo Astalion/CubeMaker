@@ -1,5 +1,9 @@
 package cubeMaker;
 
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -11,13 +15,17 @@ import java.io.LineNumberReader;
 import java.util.Scanner;
 import java.util.regex.MatchResult;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JTextField;
+import javax.swing.SpringLayout;
 import javax.swing.SwingWorker;
 
 /**
@@ -42,12 +50,10 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 	private int progress;
 	
 	private JButton cubeFileButton;
-	private JLabel cubeFileText;
-	private File cubeFile;
+	private JTextField cubeFileText;
 	
 	private JButton saveDirButton;
-	private JLabel saveDirText;
-	private File saveDir;
+	private JTextField saveDirText;
 	
 	private JButton makeButton;
 	
@@ -56,32 +62,62 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 	public CubeMakerGUI() {
 		super("Cube Maker");
 		setLocationRelativeTo(null);
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
 		JPanel bgPane = new JPanel();
+		
+		JPanel inputPane = new JPanel(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.ipady = 4;
+		c.ipadx = 6;
+		c.insets = new Insets(5, 2, 0, 2);
 		
 		/*
 		 * Cube file chooser
 		 */
-		JPanel cubeFilePane = new JPanel();
-		cubeFileButton = new JButton("Choose cube file");
-		cubeFileButton.addActionListener(new cubeFileHandler());
-		cubeFilePane.add(cubeFileButton);
+		c.gridx = 0;
+		c.gridy = 0;
+		c.anchor = GridBagConstraints.EAST;
+		inputPane.add(new JLabel("Cube file:"), c);
 		
-		cubeFileText = new JLabel(noFile);
-		cubeFilePane.add(cubeFileText);
+		cubeFileText = new JTextField(noFile);
+		cubeFileText.setPreferredSize(new Dimension(400, 20));
+		c.gridx = 1;
+		c.gridy = 0;
+		c.anchor = GridBagConstraints.WEST;
+		inputPane.add(cubeFileText, c);
+		
+		cubeFileButton = new JButton("Choose");
+		cubeFileButton.addActionListener(new cubeFileHandler());
+		cubeFileButton.setPreferredSize(new Dimension(80, 20));
+		c.gridx = 2;
+		c.gridy = 0;
+		c.anchor = GridBagConstraints.CENTER;
+		inputPane.add(cubeFileButton, c);
 		
 		/*
 		 * Save directory chooser
 		 */
-		JPanel saveDirPane = new JPanel();
-		saveDirButton = new JButton("Choose save directory");
+		c.gridx = 0;
+		c.gridy = 1;
+		c.anchor = GridBagConstraints.EAST;
+		inputPane.add(new JLabel("Save directory:"), c);
+		
+		saveDirText = new JTextField(noFile);
+		saveDirText.setPreferredSize(new Dimension(400, 20));
+		c.gridx = 1;
+		c.gridy = 1;
+		c.anchor = GridBagConstraints.WEST;
+		inputPane.add(saveDirText, c);
+		
+		saveDirButton = new JButton("Choose");
 		saveDirButton.addActionListener(new saveDirHandler());
-		saveDirPane.add(saveDirButton);
-		
-		saveDirText = new JLabel(noFile);
-		saveDirPane.add(saveDirText);
-		
+		saveDirButton.setPreferredSize(new Dimension(80, 20));
+		c.gridx = 2;
+		c.gridy = 1;
+		c.anchor = GridBagConstraints.CENTER;
+		inputPane.add(saveDirButton, c);
+
 		/*
 		 * Progress bar and text
 		 */
@@ -109,8 +145,8 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 		 * Finishing touches
 		 */
 		bgPane.setLayout(new BoxLayout(bgPane, BoxLayout.PAGE_AXIS));
-		bgPane.add(cubeFilePane);
-		bgPane.add(saveDirPane);
+		bgPane.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
+		bgPane.add(inputPane);
 		bgPane.add(progPane);
 		bgPane.add(makePane);
 		
@@ -134,21 +170,16 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 				MatchResult match = s.match();
 				
 				if(match.group(1).equals("cube")) {
-					cubeFile = new File(match.group(2));
-					cubeFileText.setText(cubeFile.getCanonicalPath());
+					//cubeFile = new File(match.group(2));
+					cubeFileText.setText(match.group(2));
 				} else if(match.group(1).equals("save")) {
-					saveDir = new File(match.group(2));
-					saveDirText.setText(saveDir.getCanonicalPath());					
+					//saveDir = new File(match.group(2));
+					saveDirText.setText(match.group(2));					
 				}
 			}
 		} catch (FileNotFoundException e) {
-			cubeFile = null;
 			cubeFileText.setText(noFile);
-			saveDir = null;
 			saveDirText.setText(noFile);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 	
@@ -159,11 +190,11 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 		FileWriter fw;
 		try {
 			fw = new FileWriter(configFile);
-			if(cubeFile != null) {
-				fw.write("cube\t" + cubeFile.getAbsolutePath() + "\n");
+			if(cubeFileText.getText() != "") {
+				fw.write("cube\t" + cubeFileText.getText() + "\n");
 			}
-			if(saveDir != null) {
-				fw.write("save\t" + saveDir.getAbsolutePath() + "\n");				
+			if(saveDirText.getText() != "") {
+				fw.write("save\t" + saveDirText.getText() + "\n");				
 			}
 			fw.close();
 		} catch (IOException e) {
@@ -177,17 +208,26 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 	private class cubeFileHandler implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
+			File f = new File(cubeFileText.getText());
+			if(f.exists()) {
+				f = f.getParentFile();
+				if(!f.exists()) {
+					f = new File(".");
+				}
+			} else {
+				f = new File(".");
+			}
 			// Open file choice dialog in current directory
-			final JFileChooser fc = new JFileChooser(new File("."));
+			final JFileChooser fc = new JFileChooser(f);
 			int returnVal = fc.showOpenDialog(cubeFileButton);
 			
 			if(returnVal == JFileChooser.APPROVE_OPTION) {
 				// Set chosen file
-				cubeFile = fc.getSelectedFile();
+				File cubeFile = fc.getSelectedFile();
 				try {
 					cubeFileText.setText(cubeFile.getCanonicalPath());
 				} catch (IOException e) {
-					cubeFileText.setText(cubeFile.getName());
+					//
 				}
 			}
 			saveConfig();
@@ -201,18 +241,27 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 	private class saveDirHandler implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
+			File f = new File(saveDirText.getText());
+			if(f.exists()) {
+				f = f.getParentFile();
+				if(!f.exists()) {
+					f = new File(".");
+				}
+			} else {
+				f = new File(".");
+			}
 			// Open file choice dialog in current directory
-			final JFileChooser fc = new JFileChooser(new File("."));
+			final JFileChooser fc = new JFileChooser(f);
 			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 			int returnVal = fc.showOpenDialog(saveDirButton);
 			
 			if(returnVal == JFileChooser.APPROVE_OPTION) {
 				// Set chosen file
-				saveDir = fc.getSelectedFile();
+				File saveDir = fc.getSelectedFile();
 				try {
 					saveDirText.setText(saveDir.getCanonicalPath());
 				} catch (IOException e) {
-					saveDirText.setText(saveDir.getName());
+					//
 				}
 			}
 			saveConfig();
@@ -226,7 +275,15 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 	private class makeHandler implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
-			if(saveDir != null && cubeFile != null) {
+			final File saveDir = new File(saveDirText.getText());
+			final File cubeFile = new File(cubeFileText.getText());
+			if(!saveDir.exists()) {
+				JOptionPane.showMessageDialog(
+						window, "Save directory not found", "Folder not found", JOptionPane.ERROR_MESSAGE);
+			} else if(!cubeFile.exists()) {
+				JOptionPane.showMessageDialog(
+						window, "Cube file not found", "File not found", JOptionPane.ERROR_MESSAGE);				
+			} else {
 				new SwingWorker<Integer, Integer>() {
 					@Override
 					protected Integer doInBackground() throws Exception {

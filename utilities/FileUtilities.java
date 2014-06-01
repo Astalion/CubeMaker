@@ -106,9 +106,11 @@ public class FileUtilities {
 			Matcher m = pattern.matcher(line);
 			Boolean found = m.find();
 			if(found) {
+				sFile.close();
 				return m;
 			}
 		}
+		sFile.close();
 		return null;
 	}
 	
