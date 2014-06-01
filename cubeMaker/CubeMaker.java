@@ -131,7 +131,8 @@ public class CubeMaker {
 		
 		if(m != null) {			
 			// Save file to cache
-			File saved = new File(cacheDir, c.getFileName() + ".jpg");
+			File saved = new File(new File(cacheDir, m.group(1)), c.getFileName() + ".jpg");
+			ImageIndex.instance.addEntry(c, m.group(1));
 			FileUtilities.saveURL(m.group(), saved);
 			
 			return ImageIO.read(saved);
@@ -163,8 +164,8 @@ public class CubeMaker {
 			}			
 		}
 		
-		File cached = getImage(cacheDir, tempName);
-		if(cached.exists()) {
+		File cached = ImageIndex.instance.findCard(c);
+		if(cached != null) {
 			return ImageIO.read(cached);
 		}
 		

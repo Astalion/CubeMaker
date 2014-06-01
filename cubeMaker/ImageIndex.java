@@ -2,10 +2,9 @@ package cubeMaker;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
@@ -18,10 +17,12 @@ public class ImageIndex {
 	private static final File indexFile = new File(cacheDir, "index.txt");
 	private static final String entry = "([^\\t]*)\\t([^\\t]*)";
 	private static final Pattern entryPattern = Pattern.compile(entry);
+	
+	public static final ImageIndex instance = new ImageIndex();
 
 	private HashMap<String, String> map;
 	
-	public ImageIndex() {
+	private ImageIndex() {
 		map = new HashMap<String, String>();
 		loadFile();
 	}
@@ -41,6 +42,7 @@ public class ImageIndex {
 		}
 	}
 	
+	/*
 	private void saveFile() {
 		try {
 			FileUtilities.fixDirs(indexFile);
@@ -54,12 +56,24 @@ public class ImageIndex {
 			e.printStackTrace();
 		}
 	}
+	*/
 	
 	public void addEntry(Card c, String set) {
 		String key = c.getFileName();
 		String value = map.get(key);
+		
 		if(value == null) {
 			map.put(key, set);
+			try {
+				// Append new set to file
+				FileUtilities.fixDirs(indexFile);
+				FileWriter pw = new FileWriter(indexFile, true);
+				pw.write(key + "\t" + set  + "\n");
+				pw.close();			
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -69,8 +83,10 @@ public class ImageIndex {
 		String set = c.getSet();
 		if(set == null) {
 			set = map.get(name);
+			if(set == null) return null;
 		}
-		File f = new File(new File(cacheDir, set), name);
+		
+		File f = new File(new File(cacheDir, set), name + ".jpg");
 		if(f.exists()) {
 			return f;
 		} else {
@@ -94,12 +110,4 @@ public class ImageIndex {
 		return sb.toString();
 	}
 	*/
-	
-	public static void main(String[] args) {
-		ImageIndex ii = new ImageIndex();
-		for(Map.Entry<String, String> pair : ii.map.entrySet()) {
-			System.out.println(pair.getKey() + ": " + pair.getValue());
-		}
-		ii.saveFile();
-	}
 }
