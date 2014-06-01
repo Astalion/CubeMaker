@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 
 public class FileUtilities {
 
-	private static void fixDirs(File target) {
+	public static void fixDirs(File target) {
 		File parent = target.getParentFile();
 		if (parent != null) {
 			parent.mkdirs();			
