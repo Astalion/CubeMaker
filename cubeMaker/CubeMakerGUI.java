@@ -67,7 +67,6 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 	
 	public CubeMakerGUI() {
 		super("Cube Maker");
-		setLocationRelativeTo(null);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
 		JPanel bgPane = new JPanel();
@@ -198,6 +197,7 @@ public class CubeMakerGUI extends JFrame implements ProgBar {
 		
 		add(bgPane);
 		pack();
+		setLocationRelativeTo(null);
 		setVisible(true);
 		setResizable(false);
 	}
