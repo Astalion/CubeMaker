@@ -124,8 +124,37 @@ public class CubeMaker {
 	 * @throws IOException
 	 */
 	private BufferedImage findOnline(Card c) throws IOException {
+		BufferedImage img = findMtgImage(c);
+		if(img == null) img = findMagicCards(c);
+		return img;
+	}
+	
+	private BufferedImage findMtgImage(Card c) throws IOException {
+		String set;
+		if((set = c.getSet()) == null) {
+			set = "any";
+		}
+
+		// Save file to cache
+		File saved = new File(new File(cacheDir, set), c.getFileName() + ".jpg");
+		if(FileUtilities.saveURL(c.getMtgImageURL(), saved)) {
+			BufferedImage img = ImageIO.read(saved);
+			if(img.getWidth() != 480) {
+				File cropped = new File(new File(dataDir, "cropped"), c.getFileName() + ".jpg");
+				FileUtilities.saveURL(c.getMtgImageCrop(), cropped);
+				return null;
+			}
+			
+			ImageIndex.instance.addEntry(c, set);			
+			return img;	
+		} else {
+			return null;
+		}
+	}
+	
+	private BufferedImage findMagicCards(Card c) throws IOException {
 		File tempHtml = new File("temp.html");
-		FileUtilities.saveURL("http://magiccards.info/query?q=" + c.getURLName(), tempHtml);		
+		FileUtilities.saveURL(c.getMcardsURL(), tempHtml);		
 		Matcher m = FileUtilities.matchInFile(tempHtml, linkPattern);
 		tempHtml.delete();
 		
@@ -138,7 +167,7 @@ public class CubeMaker {
 			return ImageIO.read(saved);
 		} else {
 			return null;
-		}
+		}		
 	}
 	
 	/**
@@ -237,14 +266,6 @@ public class CubeMaker {
 					fw.write(c.getName()+"\n");
 					fw.close();
 					System.out.println("Couldn't find " + c.getName());
-					try {
-						FileUtilities.saveURL(
-								"http://magiccards.info/query?q=" + c.getURLName(),
-								new File(errorDir, c.getName() +".html")
-							);
-					} catch (Exception e) {
-						
-					}
 				}
 			}
 			if(i != 0){
@@ -253,6 +274,7 @@ public class CubeMaker {
 				n++;
 			}
 			pBar.finish(n-1);
+			s.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

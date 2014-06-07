@@ -27,6 +27,7 @@ public class CopyCheck {
 			m = addFile(f, m);
 			latestFile = f;
 		}
+		sc.close();
 		return m;
 	}
 	
@@ -52,7 +53,8 @@ public class CopyCheck {
 				v1 = v2;
 			}
 			newMap.put(name, v1);
-		}		
+		}
+		sc.close();
 		return newMap;
 	}
 	

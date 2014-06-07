@@ -85,9 +85,19 @@ public class Card {
 	/*
 	 * Getters
 	 */
-	public String getURLName() {
-		return "n!\"" + name.replace(" ", "+") + (set != null ? "\"%20e:" + set : "\"");
-	}	
+	private static final String mcards = "http://magiccards.info/query?q=";
+	public String getMcardsURL() {
+		return mcards + "n!\"" + name.replace(" ", "+") + (set != null ? "\"%20e:" + set : "\"");
+	}
+	
+	private static final String mtgImage = "http://mtgimage.com/";
+	public String getMtgImageURL() {
+		return mtgImage + (set == null ? "card/" : "set/" + set + "/") + name.replace(" ", "_") + ".jpg";
+	}
+	public String getMtgImageCrop() {
+		return mtgImage + (set == null ? "card/" : "set/" + set + "/") + name.replace(" ", "_") + ".crop.jpg";
+	}
+	
 	public String getFileName() {
 		return name.replaceAll("[',]", "");
 	}

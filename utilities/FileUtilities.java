@@ -1,11 +1,14 @@
 package utilities;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
@@ -23,11 +26,16 @@ public class FileUtilities {
 		
 	}
 	
-	public static void saveURL(String urlString, File outFile)
+	public static void main(String[] args) {
+		saveURL("http://mtgimage.com/card/Akroma,%20Angel%20of%20Wrath.jpg", new File("test"));
+	}
+	
+	public static Boolean saveURL(String urlString, File outFile)
 	{
 		fixDirs(outFile);
 	    BufferedInputStream in = null;
 	    FileOutputStream fout = null;
+	    Boolean success = false;
 	    try
 	    {
 	            in = new BufferedInputStream(new URL(urlString).openStream());
@@ -39,24 +47,30 @@ public class FileUtilities {
 	            {
 	                    fout.write(data, 0, count);
 	            }
-	    } catch (Exception e) {
+	            success = true;
+	    } catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	    finally
 	    {
-	            if (in != null)
-					try {
-						in.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-	            if (fout != null)
-					try {
-						fout.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+	    	if (in != null)
+				try {
+					in.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+	        if (fout != null)
+				try {
+					fout.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 	    }
+	    return success;
 	}
 	
 
@@ -99,7 +113,8 @@ public class FileUtilities {
 	}
 
 	public static Matcher matchInFile(File f, Pattern pattern) throws FileNotFoundException {
-		Scanner sFile = new Scanner(f);
+		BufferedReader bf = new BufferedReader(new FileReader(f));
+		Scanner sFile = new Scanner(bf);
 		
 		while (sFile.hasNextLine()) {
 			String line = sFile.nextLine();
