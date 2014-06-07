@@ -140,12 +140,19 @@ public class CubeMaker {
 		if(FileUtilities.saveURL(c.getMtgImageURL(), saved)) {
 			BufferedImage img = ImageIO.read(saved);
 			if(img.getWidth() != 480) {
+				// Prefer magiccards.info to small sized
+				BufferedImage img2 = findMagicCards(c);
+				if(img2 != null) return img2;
+				
+				// Last resort: resize image and save cropped version
+				img = ImageFix.fixImage(img);
 				File cropped = new File(new File(dataDir, "cropped"), c.getFileName() + ".jpg");
 				FileUtilities.saveURL(c.getMtgImageCrop(), cropped);
-				return null;
+			} else {
+				// Don't cache low-res
+				ImageIndex.instance.addEntry(c, set);				
 			}
-			
-			ImageIndex.instance.addEntry(c, set);			
+					
 			return img;	
 		} else {
 			return null;
@@ -184,7 +191,7 @@ public class CubeMaker {
 		if(c.getSet() == null) {
 			File mse = getImage(currDir + "\\mse", tempName);
 			if(mse.exists()) {
-				return MSEImageFix.fixImage(mse);
+				return ImageFix.fixImage(mse);
 			} 
 			
 			File pref = getImage(currDir + "\\pref", tempName);
