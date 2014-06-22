@@ -58,21 +58,20 @@ public class ImageIndex {
 	
 	public void addEntry(Card c, String set) {
 		String key = c.getFileName();
-		String value = map.get(key);
+		//String value = map.get(key);
 		
-		if(value == null) {
-			map.put(key, set);
-			try {
-				// Append new set to file
-				FileUtilities.fixDirs(indexFile);
-				FileWriter pw = new FileWriter(indexFile, true);
-				pw.write(key + "\t" + set  + "\n");
-				pw.close();			
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		map.put(key, set);
+		try {
+			// Append new set to file
+			FileUtilities.fixDirs(indexFile);
+			FileWriter pw = new FileWriter(indexFile, true);
+			pw.write(key + "\t" + set  + "\n");
+			pw.close();			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		
 	}
 	
 	public File findCard(Card c) {

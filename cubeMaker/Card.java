@@ -4,6 +4,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Card {
+	private static String[] badsets = {"vma"};
+	private static String excludestring;
+	
 	private String name;
 	private String set;
 	private int count;
@@ -12,6 +15,16 @@ public class Card {
 	 * Constructors
 	 */
 	public Card(String name, String exp, int count) {
+		if(excludestring == null) {
+			StringBuilder sb = new StringBuilder("+not+(");
+			for(int i = 0; i < badsets.length; i++) {
+				sb.append("e:" + badsets[i]);
+				if(i == badsets.length - 1) break;
+				sb.append("+or+");
+			}
+			sb.append(")");
+			excludestring = sb.toString();
+		}
 		this.name = name;
 		this.set = exp;
 		this.count = count;
@@ -87,7 +100,7 @@ public class Card {
 	 */
 	private static final String mcards = "http://magiccards.info/query?q=";
 	public String getMcardsURL() {
-		return mcards + "n!\"" + name.replace(" ", "+") + (set != null ? "\"%20e:" + set : "\"");
+		return mcards + "n!\"" + name.replace(" ", "+") + (set != null ? "\"%20e:" + set : "\"" + excludestring);
 	}
 	
 	private static final String mtgImage = "http://mtgimage.com/";
