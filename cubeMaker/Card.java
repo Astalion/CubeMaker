@@ -50,6 +50,9 @@ public class Card {
 	private static final String lineString = "(?:([0-9]+)[Xx]?\\s)?\\s*([^\\[\\]]+)\\s*(?:\\s+\\[([^\\[\\]]+)\\])?[^\\[\\]]*";
 	private static final Pattern linePattern = Pattern.compile(lineString);
 	public static Card parseLine(String line) {
+		if(line.charAt(0) == '\"') {
+			return new Card(line.substring(1, line.length()-1));
+		}
 		Matcher m = linePattern.matcher(line);
 		if(m.matches()) {
 			Integer count;
@@ -105,14 +108,14 @@ public class Card {
 	
 	private static final String mtgImage = "http://mtgimage.com/";
 	public String getMtgImageURL() {
-		return mtgImage + (set == null ? "card/" : "set/" + set + "/") + name.replace(" ", "_") + ".jpg";
+		return mtgImage + (set == null ? "card/" : "set/" + set + "/") + name.replace(" ", "_").replace("[\\?\\!]", "") + ".jpg";
 	}
 	public String getMtgImageCrop() {
 		return mtgImage + (set == null ? "card/" : "set/" + set + "/") + name.replace(" ", "_") + ".crop.jpg";
 	}
 	
 	public String getFileName() {
-		return name.replaceAll("[',]", "");
+		return name.replaceAll("[',\\!\\?]", "");
 	}
 	public String getName() {
 		return name;
